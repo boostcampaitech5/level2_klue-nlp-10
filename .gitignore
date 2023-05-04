@@ -3,6 +3,7 @@
 .dotnet
 .local
 .vscode-server
+.ssh
 
 .profile
 .viminfo

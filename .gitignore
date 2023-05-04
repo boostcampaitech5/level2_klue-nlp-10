@@ -1,0 +1,15 @@
+#
+.cache
+.dotnet
+.local
+.vscode-server
+
+.profile
+.viminfo
+.wget-hsts
+# 
+dataset
+
+#
+code/.*
+code/__pycache__

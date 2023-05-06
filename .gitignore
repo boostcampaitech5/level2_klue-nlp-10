@@ -4,6 +4,11 @@
 .local
 .vscode-server
 .ssh
+.bash_history
+.bashrc
+.python_history
+.conda
+tool
 
 .profile
 .viminfo

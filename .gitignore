@@ -19,3 +19,5 @@ dataset
 #
 code/.*
 code/__pycache__
+code/results/*/optimizer.pt
+code/results/*/pytorch_model.bin

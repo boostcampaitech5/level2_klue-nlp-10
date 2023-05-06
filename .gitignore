@@ -15,7 +15,11 @@ tool
 .wget-hsts
 # 
 dataset
+#
+best_model/*.bin
 
 #
 code/.*
 code/__pycache__
+**/optimizer.pt
+**/pytorch_model.bin

@@ -179,7 +179,7 @@ class Model(pl.LightningModule):
         if self.use_LSTM:
             self.plm = transformers.AutoModel.from_pretrained(model_name)
             self.plm.resize_token_embeddings(vocab_size)
-            input_size = model.config.hidden_size
+            input_size = self.plm.config.hidden_size
             self.lstm = torch.nn.LSTM(input_size=input_size, hidden_size=input_size, num_layers=2, batch_first=True, bidirectional=True)
             self.classifier = torch.nn.Linear(input_size*2, 30)
         # LSTM 미사용 시 : Usual huggingface SequenceClassification

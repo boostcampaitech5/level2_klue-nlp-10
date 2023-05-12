@@ -1,7 +1,7 @@
 # 프로젝트 : 문장 내 개체간 관계 추출
----
+
 ## Directiory
----
+
 ```
 checkpoints
 code
@@ -26,7 +26,7 @@ Untitled.ipynb
 ```
 
 ## Usage
----
+
 1. setting (`config.json` 파일 사용)
     - `config.json` 파일을 열어 파라미터를 확인 후 원하는 값으로 변경
 ```json

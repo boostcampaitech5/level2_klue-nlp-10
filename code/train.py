@@ -14,7 +14,6 @@ from load_data_marker import *
 
 import wandb
 import argparse
-from utils import *
 import json
 
 # Train, validation splitting을 위해 추가
@@ -126,6 +125,8 @@ class Dataloader(pl.LightningDataModule):
             train_data = load_data(self.train_path)
             train_label = np.array(label_to_num(train_data['label'].values))
             
+            # train, validation split
+            # test size를 바꾸거나, random_state를 바꾸면 validation이 바뀝니다.
             train_idx, val_idx = train_test_split(np.arange(len(train_data)), test_size=0.1, random_state=42, stratify=train_label)
             train_data, val_data = train_data.iloc[train_idx], train_data.iloc[val_idx]
             train_label, val_label = train_label[train_idx], train_label[val_idx]

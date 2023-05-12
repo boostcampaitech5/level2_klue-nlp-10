@@ -298,6 +298,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_steps', type=int, default=500)
     parser.add_argument('--shuffle', type=bool, default=True)
     parser.add_argument('--use_LSTM', type=bool, default=False)
+    parser.add_argument('--label_smoothing', type=float, default=0.0)
     
     parser.add_argument('--data_path', type=str, default='../dataset/')
     
@@ -352,7 +353,7 @@ if __name__ == '__main__':
     vocab_size = len(dataloader.tokenizer)    
     
     # Loss function은 여기서 정의할 것. Custom이 필요할 경우, 따로 정의해서 여기서 불러오면 됨.
-    loss = torch.nn.CrossEntropyLoss()
+    loss = torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
     
     # model and trainer
     model = Model(args.model_name, args.learning_rate, vocab_size, use_LSTM=args.use_LSTM,loss=loss, warmup_steps=args.warmup_steps)

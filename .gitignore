@@ -23,3 +23,10 @@ code/.*
 code/__pycache__
 **/optimizer.pt
 **/pytorch_model.bin
+code/checkpoints/*
+code/wandb/*
+code/lightning_logs/*
+code/results/*
+code/*.lock
+code/*.toml
+code/prediction/submission.csv

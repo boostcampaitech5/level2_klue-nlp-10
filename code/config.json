@@ -1,0 +1,15 @@
+{
+    "model_name": "klue/bert-base",
+    "batch_size": 16,
+    "max_epoch": 20,
+    "learning_rate": 1e-5,
+    "weight_decay": 0.01,
+    "wandb_username": "your_name",
+    "wandb_entity": "your_name",
+    "wandb_key": "your_key",
+    "wandb_project_name": "TEST",
+    "use_LSTM": true, 
+    "data_path": "../dataset/",
+    "warmup_steps": 500, 
+    "checkpoint_file": "./checkpoints/last.ckpt" 
+}

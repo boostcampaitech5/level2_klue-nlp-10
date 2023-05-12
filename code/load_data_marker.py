@@ -20,15 +20,21 @@ class RE_Dataset(torch.utils.data.Dataset):
 
 def preprocessing_dataset(dataset):
   """ 처음 불러온 csv 파일을 원하는 형태의 DataFrame으로 변경 시켜줍니다."""
+  
   subject_entity = []
   object_entity = []
+  sub_type = []
+  obj_type = []
   for i,j in zip(dataset['subject_entity'], dataset['object_entity']):
-    i = i[1:-1].split(',')[0].split(':')[1]
-    j = j[1:-1].split(',')[0].split(':')[1]
-
-    subject_entity.append(i)
-    object_entity.append(j)
-  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity,'label':dataset['label'],})
+    # 1. Dict로 변환
+    i = eval(i)
+    j = eval(j)
+    subject_entity.append(i['word'])
+    object_entity.append(j['word'])
+    sub_type.append(i['type'])
+    obj_type.append(j['type'])
+  out_dataset = pd.DataFrame({'id':dataset['id'], 'sentence':dataset['sentence'],'subject_entity':subject_entity,'object_entity':object_entity, 
+                              'sub_type':sub_type, 'obj_type':obj_type, 'label':dataset['label'],})
   return out_dataset
 
 def load_data(dataset_dir):
@@ -40,14 +46,24 @@ def load_data(dataset_dir):
 
 def tokenized_dataset(dataset, tokenizer):
   """ tokenizer에 따라 sentence를 tokenizing 합니다."""
+
   concat_entity = []
-  for e01, e02 in zip(dataset['subject_entity'], dataset['object_entity']):
+  sent_list = []
+  for e01, e02, sent, t01, t02 in zip(dataset['subject_entity'], dataset['object_entity'], dataset['sentence'], dataset['sub_type'], dataset['obj_type']):
+    # 2. Punctuation을 넣은 subject_entity, object_entity 추출
+    # Punctuation rule : https://arxiv.org/abs/2102.01373 에 따라서 삽입.
+    # Rule for subject_entity: @ * type * sub_entity @
+    # Rule for object_entity: # ^ type ^ sub_entity #
     temp = ''
-    temp = e01 + '[SEP]' + e02
+    temp = f'@ * {t01} * {e01} @과 # ^ {t02} ^ {e02} #의 관계'
+    sent = sent.replace(e01, f'@ * {t01} * {e01} @')
+    sent = sent.replace(e02, f'# ^ {t02} ^ {e02} #')
+    sent_list.append(sent)
     concat_entity.append(temp)
+  print(concat_entity[0], sent_list[0])
   tokenized_sentences = tokenizer(
       concat_entity,
-      list(dataset['sentence']),
+      sent_list,
       return_tensors="pt",
       padding=True,
       truncation=True,

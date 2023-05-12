@@ -326,7 +326,7 @@ if __name__ == '__main__':
                                     save_weights_only=True,   # Weight만 저장할지, 학습 관련 정보도 저장할지 여부.
                                     mode='min',                # 'min' : monitor metric이 증가하면 저장.
                                     dirpath='./checkpoints',    # ckpt file을 저장할 경로
-                                    filename=f'{args.model_name.replace("/","-")}-' + '-{global_step}-{val_loss:.3f}', # ckpt file name
+                                    filename=f'{args.model_name.replace("/","-")}-' + '-{step}-{val_loss:.3f}', # ckpt file name
                                     )
 
     early_stop_callback = EarlyStopping(monitor='val_loss', 

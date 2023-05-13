@@ -30,3 +30,4 @@ code/results/*
 code/*.lock
 code/*.toml
 code/prediction/submission.csv
+code/my_env

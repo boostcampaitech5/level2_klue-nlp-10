@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
+from loss import * 
 
 
 def klue_re_micro_f1(preds, labels):
@@ -104,7 +105,7 @@ def train():
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
     save_steps=500,                 # model saving step.
-    num_train_epochs=20,              # total number of training epochs
+    num_train_epochs=5,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=16,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
@@ -119,7 +120,9 @@ def train():
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True 
   )
-  trainer = Trainer(
+  
+  #custom loss function을 사용하기 위해 loss.py에서 정의한 CustomTrainer 사용(FocalLoss->FocalLossTrainer, LDAMLoss->LDAMLossTrainer)
+  trainer = LDAMLossTrainer(#Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above
     train_dataset=RE_train_dataset,         # training dataset

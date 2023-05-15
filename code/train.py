@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score
 from transformers import AutoTokenizer, AutoConfig, AutoModelForSequenceClassification, Trainer, TrainingArguments, RobertaConfig, RobertaTokenizer, RobertaForSequenceClassification, BertTokenizer
 from load_data import *
-
+import eda
 
 def klue_re_micro_f1(preds, labels):
     """KLUE-RE micro f1 (except no_relation)"""
@@ -65,28 +65,39 @@ def label_to_num(label):
   
   return num_label
 
+
+def eda_aug(dataset):
+    dataset = eda.calculate_idx(dataset)
+    dataset = eda.random_delete(dataset, 0.3)
+    return dataset
+    
+    
 def train():
   # load model and tokenizer
   # MODEL_NAME = "bert-base-uncased"
-  MODEL_NAME = "klue/bert-base"
+  MODEL_NAME = "klue/roberta-small"
+#roberta -small로 test(epoch 20, batch_size : 32까지 늘릴듯?)
   tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
+
   # load dataset
-  train_dataset = load_data("../dataset/train/train.csv")
+  train_dataset = load_data("../dataset/train/train_no_dup.csv")
   # dev_dataset = load_data("../dataset/train/dev.csv") # validation용 데이터는 따로 만드셔야 합니다.
 
-  train_label = label_to_num(train_dataset['label'].values)
+  augmented_train_dataset = eda_aug(train_dataset)
+
+  train_label = label_to_num(augmented_train_dataset['label'].values)
   # dev_label = label_to_num(dev_dataset['label'].values)
 
   # tokenizing dataset
-  tokenized_train = tokenized_dataset(train_dataset, tokenizer)
+  tokenized_train = tokenized_dataset(augmented_train_dataset, tokenizer)
   # tokenized_dev = tokenized_dataset(dev_dataset, tokenizer)
 
   # make dataset for pytorch.
   RE_train_dataset = RE_Dataset(tokenized_train, train_label)
   # RE_dev_dataset = RE_Dataset(tokenized_dev, dev_label)
 
-  device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+  device = torch.device('cuda:0' if torch.cuda.is_available() else 'gpu')
 
   print(device)
   # setting model hyperparameter
@@ -103,8 +114,8 @@ def train():
   training_args = TrainingArguments(
     output_dir='./results',          # output directory
     save_total_limit=5,              # number of total save model.
-    save_steps=500,                 # model saving step.
-    num_train_epochs=20,              # total number of training epochs
+    save_steps=1000,                 # model saving step.
+    num_train_epochs=10,              # total number of training epochs
     learning_rate=5e-5,               # learning_rate
     per_device_train_batch_size=16,  # batch size per device during training
     per_device_eval_batch_size=16,   # batch size for evaluation
@@ -119,6 +130,7 @@ def train():
     eval_steps = 500,            # evaluation step.
     load_best_model_at_end = True 
   )
+                            
   trainer = Trainer(
     model=model,                         # the instantiated 🤗 Transformers model to be trained
     args=training_args,                  # training arguments, defined above

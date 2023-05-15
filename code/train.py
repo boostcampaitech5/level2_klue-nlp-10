@@ -12,6 +12,9 @@ import transformers
 # marker가 추가된 데이터를 default로 사용하기로 합시다. 
 from load_data_marker import *
 
+# user modified loss functions
+from loss import *
+
 import wandb
 import argparse
 import json
@@ -309,6 +312,8 @@ if __name__ == '__main__':
     parser.add_argument('--config', default=False, type=str, help='config file path')
     parser.add_argument('--wandb_key', default='key')
     
+
+
     # config.json 파일에서 args를 불러오기 때문에, 위의 옵션들은 config.json에서 조정하는 것을 권장함.
     args = parser.parse_args()
     if args.config:
@@ -354,7 +359,9 @@ if __name__ == '__main__':
     vocab_size = len(dataloader.tokenizer)    
     
     # Loss function은 여기서 정의할 것. Custom이 필요할 경우, 따로 정의해서 여기서 불러오면 됨.
-    loss = torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
+    #loss = torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
+    #loss = LDAMLoss()
+    loss = FocalLoss()
     
     # model and trainer
     model = Model(args.model_name, args.learning_rate, vocab_size, use_LSTM=args.use_LSTM,loss=loss, warmup_steps=args.warmup_steps)

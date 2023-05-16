@@ -14,10 +14,13 @@ from load_data_marker import *
 
 import wandb
 import argparse
+from utils import *
 import json
 
 # Train, validation splitting을 위해 추가
 from sklearn.model_selection import train_test_split
+
+from collections import Counter
 
 # pytorch_lightning을 사용하기 위해 추가
 import pytorch_lightning as pl
@@ -26,6 +29,9 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.callbacks import LearningRateMonitor
 from transformers import get_linear_schedule_with_warmup
+
+# Loss function
+from loss import *
 
 
 # To disable warning in the FastTokenizer..
@@ -125,8 +131,6 @@ class Dataloader(pl.LightningDataModule):
             train_data = load_data(self.train_path)
             train_label = np.array(label_to_num(train_data['label'].values))
             
-            # train, validation split
-            # test size를 바꾸거나, random_state를 바꾸면 validation이 바뀝니다.
             train_idx, val_idx = train_test_split(np.arange(len(train_data)), test_size=0.1, random_state=42, stratify=train_label)
             train_data, val_data = train_data.iloc[train_idx], train_data.iloc[val_idx]
             train_label, val_label = train_label[train_idx], train_label[val_idx]
@@ -285,7 +289,9 @@ class Model(pl.LightningModule):
         #                                                 pct_start = 1.0 - 500.0 / self.trainer.estimated_stepping_batches,
         #                                                 total_steps = self.trainer.estimated_stepping_batches, anneal_strategy='linear')
         return [optimizer], [scheduler]
-        
+    
+   
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -300,14 +306,18 @@ if __name__ == '__main__':
     parser.add_argument('--shuffle', type=bool, default=True)
     parser.add_argument('--use_LSTM', type=bool, default=False)
     parser.add_argument('--label_smoothing', type=float, default=0.0)
+    parser.add_argument('--focal_gamma', type=float, default=2.0)
+    parser.add_argument('--focal_alpha', type=bool, default=False)
     
     parser.add_argument('--data_path', type=str, default='../dataset/')
+    parser.add_argument('--train_file', type=str, default='train.csv')
     
     parser.add_argument('--wandb_username', default='username', type=str)
     parser.add_argument('--wandb_project_name', default='project_name', type=str)
     parser.add_argument('--wandb_entity', default='entity', type=str)
     parser.add_argument('--config', default=False, type=str, help='config file path')
     parser.add_argument('--wandb_key', default='key')
+    
     
     # config.json 파일에서 args를 불러오기 때문에, 위의 옵션들은 config.json에서 조정하는 것을 권장함.
     args = parser.parse_args()
@@ -316,10 +326,11 @@ if __name__ == '__main__':
             parser.set_defaults(**json.load(f))
         args = parser.parse_args()
     
-    train_path = args.data_path + 'train/train.csv'
+    train_path = args.data_path + 'train/' + args.train_file
     test_path = args.data_path + 'test/test_data.csv'
     predict_path = args.data_path + 'test/test_data.csv'
     
+    print(train_path)
     # Callbacks in pytorch lightning trainer
     cp_callback = ModelCheckpoint(monitor='val_loss',    # val_loss를 모니터링하여 저장함.
                                     verbose=False,            # 중간 출력문을 출력할지 여부. False 시, 없음.
@@ -344,18 +355,34 @@ if __name__ == '__main__':
     wandb.login(key=args.wandb_key)
     wandb_logger = WandbLogger(
         log_model=False, 
-        name=f'{args.model_name.replace("/","-")}_{args.learning_rate:.2e}_{args.batch_size}_{args.max_epoch}_{args.use_LSTM}', # wandb run name
+        name=f'{args.model_name.replace("/","-")}_{args.learning_rate:.2e}_{args.batch_size}_{args.max_epoch}_{args.use_LSTM}_{args.label_smoothing}', # wandb run name
         project=args.wandb_project_name,    # wandb project name
         entity=args.wandb_entity    # wandb entity name (owner name of project)
     )
     
     # dataloader, vocab_size to define model 
     dataloader = Dataloader(args.model_name, args.batch_size, train_path, test_path, predict_path, shuffle=args.shuffle)
+    temp = Dataloader(args.model_name, args.batch_size, train_path, test_path, predict_path, shuffle=args.shuffle)
+    temp.setup('fit')
+    loss_weight = torch.FloatTensor(np.zeros(30))
+    count = Counter(temp.train_dataset.labels)
+    for i in range(30):
+        loss_weight[i] = 1.0 - count[i] / len(temp.train_dataset.labels)
+    del temp
+    del count
+    
     vocab_size = len(dataloader.tokenizer)    
     
     # Loss function은 여기서 정의할 것. Custom이 필요할 경우, 따로 정의해서 여기서 불러오면 됨.
-    loss = torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
-    
+    # loss = torch.nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
+    # loss = LDAMLoss()
+    if args.focal_alpha:
+        # Weight applied
+        loss = FocalLossWithLabelSmoothing(gamma=args.focal_gamma, alpha = loss_weight, smoothing=args.label_smoothing)
+    else:
+        # No weight applied
+        loss = FocalLossWithLabelSmoothing(gamma=args.focal_gamma, smoothing=args.label_smoothing)
+    print(loss)
     # model and trainer
     model = Model(args.model_name, args.learning_rate, vocab_size, use_LSTM=args.use_LSTM,loss=loss, warmup_steps=args.warmup_steps)
     trainer = pl.Trainer(accelerator='gpu', max_epochs=args.max_epoch, callbacks=callback_list, 
@@ -364,3 +391,4 @@ if __name__ == '__main__':
     # Training
     trainer.fit(model=model, datamodule=dataloader)
     # Test는 수행하지 않습니다. (Test를 위한 데이터셋이 없기 때문)
+

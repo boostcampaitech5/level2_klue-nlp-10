@@ -11,6 +11,7 @@
     "wandb_project_name": "TEST",
     "use_LSTM": true,
     "data_path": "../dataset/",
+    "train_file": "new_train.csv",
     "warmup_steps": 500,
     "checkpoint_file": "./checkpoints/last.ckpt"
 }

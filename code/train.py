@@ -67,8 +67,8 @@ def label_to_num(label):
 
 
 def eda_aug(dataset):
-    dataset = eda.calculate_idx(dataset)
-    dataset = eda.random_delete(dataset, 0.3)
+    dataset = eda.update_idx(dataset)
+    dataset = eda.random_delete(dataset, 0.1)
     return dataset
     
     

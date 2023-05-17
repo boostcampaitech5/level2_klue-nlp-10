@@ -10,7 +10,7 @@
     "wandb_key": "your_key",
     "wandb_project_name": "TEST",
     "use_LSTM": true,
-    "data_path": "../dataset/",
+    "data_path": "/opt/ml/dataset/",
     "warmup_steps": 500,
     "checkpoint_file": "./checkpoints/last.ckpt"
-}
+    }

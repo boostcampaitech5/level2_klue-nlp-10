@@ -1,0 +1,17 @@
+{
+    "model_name": "klue/roberta-large",
+    "batch_size": 16,
+    "max_epoch": 20,
+    "learning_rate": 1e-5,
+    "weight_decay": 0.01,
+    "label_smoothing": 0.0,
+    "wandb_username": "taehyeong",
+    "wandb_entity": "th-imk3",
+    "wandb_name": "large_mlt",
+    "wandb_key": "50698af86ebe9ce45f82fb01ab2050230cb2f8a9",
+    "wandb_project_name": "RE Task (2nd project)",
+    "use_LSTM": false,
+    "data_path": "/opt/ml/dataset/",
+    "warmup_steps": 500,
+    "checkpoint_file": "./checkpoints/large_mlt.ckpt"
+    }

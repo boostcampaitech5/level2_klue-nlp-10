@@ -332,19 +332,19 @@ if __name__ == '__main__':
     
     print(train_path)
     # Callbacks in pytorch lightning trainer
-    cp_callback = ModelCheckpoint(monitor='val_loss',    # val_loss를 모니터링하여 저장함.
+    cp_callback = ModelCheckpoint(monitor='val_f1',    # val_loss를 모니터링하여 저장함.
                                     verbose=False,            # 중간 출력문을 출력할지 여부. False 시, 없음.
                                     save_last=True,           # 직전 ckpt는 last.ckpt 로 따로 저장됨
                                     save_top_k=5,             # k개의 최고 성능 체크 포인트를 저장.
                                     save_weights_only=True,   # Weight만 저장할지, 학습 관련 정보도 저장할지 여부.
-                                    mode='min',                # 'min' : monitor metric이 증가하면 저장.
+                                    mode='max',                # 'min' : monitor metric이 증가하면 저장.
                                     dirpath='./checkpoints',    # ckpt file을 저장할 경로
                                     filename=f'{args.model_name.replace("/","-")}-' + '-{step}-{val_loss:.3f}', # ckpt file name
                                     )
 
-    early_stop_callback = EarlyStopping(monitor='val_loss', 
+    early_stop_callback = EarlyStopping(monitor='val_f1', 
                                         patience=7,         # x 번 이상 validation 성능이 안좋아지면 early stop
-                                        mode='min'          # 'max' : monitor metric은 최대화되어야 함.
+                                        mode='max'          # 'max' : monitor metric은 최대화되어야 함.
                                         )
     
     lr_monitor = LearningRateMonitor(logging_interval='step')
